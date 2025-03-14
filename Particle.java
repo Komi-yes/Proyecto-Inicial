@@ -18,7 +18,8 @@ public class Particle {
     private Circle smallCircle;  
     private boolean isRed;       
     private int w;               
-    private int h;               
+    private int h;         
+    private ArrayList<ArrayList<Integer>> cycle;      
 
     /**
      * Crea una partícula con un color, posición, velocidad y tamaño específicos.
@@ -52,8 +53,73 @@ public class Particle {
         smallCircle.moveTo(px + w, h - py);
         vx = velx;
         vy = vely;
+        cycle = cycleCalculator(); 
         makeVisible();
         isVisible = true;
+    }
+
+    public ArrayList<ArrayList<Integer>> cycleCalculator(){
+        ArrayList<ArrayList<Integer>> cycleCalculation = new ArrayList<>();
+        int posXCal = px;
+        int posYCal = py;
+        int velXCal = vx;
+        int velYCal = vy;
+
+        while(!cycleCalculation.contains({posXCal, posYCal, velXCal, velYCal})){
+            cycleCalculation.add({posXCal, posYCal, velXCal, velYCal});
+            ArrayList<Integer> newState = bounceCalculation(posXCal+velXCal, posYCal+velYCal, velXCal, velYCal);
+            posXCal = newState.get(0);
+            posYCal = newState.get(1);
+            velXCal = newState.get(2);
+            velYCal = newState.get(3);
+        }
+    }
+
+    public ArrayList<Integer> bounceCalculation(posXCal, posYCal, velXCal, velYCal){
+        int xLeft;
+        int yLeft;
+         if (side) {
+            while (posXCal > w || posXCal < 0 || newpy > h || newpy < 0) {
+                if (posXCal > w) {
+                    xLeft = posXCal - w;
+                    posXCal = w - xLeft;
+                    velXCal = -velXCal;
+                } else if (posXCal < 0) {
+                    xLeft = -posXCal;
+                    posXCal = xLeft;
+                    velXCal = -velXCal;
+                } else if (posYCal > h) {
+                    yLeft = posYCal - h;
+                    posYCal = h - yLeft;
+                    velYCal = -velYCal;
+                } else if (posYCal < 0) {
+                    yLeft = -posYCal;
+                    posYCal = yLeft;
+                    velYCal = -velYCal;
+                }
+            }
+        } else {
+            while (posXCal < -w || posXCal > 0 || newpy > h || newpy < 0) {
+                if (posXCal < -w) {
+                    xLeft = posXCal + w;
+                    posXCal = -w - xLeft;
+                    velXCal = -velXCal;
+                } else if (posXCal > 0) {
+                    xLeft = -posXCal;
+                    posXCal = xLeft;
+                    velXCal = -velXCal;
+                } else if (posYCal > h) {
+                    yLeft = posYCal - h;
+                    posYCal = h - yLeft;
+                    velYCal = -velYCal;
+                } else if (posYCal < 0) {
+                    yLeft = -posYCal;
+                    posYCal = yLeft;
+                    velYCal = -velYCal;
+                }
+            }
+        }
+        return {posXCal, posYCal, velXCal, velYCal};
     }
 
     public ArrayList<Integer> bounce(int newpx, int newpy) {
@@ -306,6 +372,10 @@ public class Particle {
         return isRed;
     }
 
+    public boolean getSide(){
+        return side;
+    }
+
     /**
      * Elimina la partícula y la hace invisible.
      */
@@ -313,4 +383,5 @@ public class Particle {
         smallCircle.makeInvisible();
         bigCircle.makeInvisible();
     }
+
 }

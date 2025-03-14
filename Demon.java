@@ -21,7 +21,7 @@ public class Demon {
         rectangle = new Rectangle(w - 2, h - d);
         rectangle.changeColor("rojo");
         rectangle.changeSize(5, 5);
-        closed = false;
+        closed = true;
         isVisible = true;
     }
 

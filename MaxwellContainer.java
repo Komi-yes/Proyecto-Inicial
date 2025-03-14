@@ -205,12 +205,15 @@ public class MaxwellContainer {
         while (tick < ticks) {
             ArrayList<Particle> particlesPredictions = new ArrayList<>();
             ArrayList<Integer> openDemons;
+
             for (Particle p : particles.values()) {
                 Particle particle = p.movePrediction();
                 particlesPredictions.add(particle);
             }
+
             particlesPredictions.removeIf(elemento -> elemento == null);
             openDemons = askDemon(particlesPredictions);
+
             for (Particle p : particlesPredictions) {
                 p.move(openDemons);
             }
@@ -502,7 +505,50 @@ public class MaxwellContainer {
      * @return Una lista de demonios abiertos.
      */
     private ArrayList<Integer> askDemon(ArrayList<Particle> particlesPredictions) {
-        ArrayList<Integer> ans = new ArrayList<>();
-        return ans;
+        ArrayList<Integer> openDemons = new ArrayList<>();
+        TreeMap<Integer, ArrayList<Particle>> possibleParticles = new TreeMap<>();
+        double yHit;
+        int intYHit;
+        int pasan = 0;
+        int rebotan = 0;
+        for (int key : demons.keySet()) {
+            possibleParticles.put(key, new ArrayList<>());
+        }
+        for (Particle p : particlesPredictions){
+            yHit = p.getPy() + p.getVy() * (p.getPx() / p.getVx());
+            intYHit = (int) yHit;
+            if(demons.containsKey(intYHit)){
+                possibleParticles.get(intYHit).add(p);
+            }
+        }
+
+        for (Map.Entry<Integer, ArrayList<Particle>> entry : possibleParticles.entrySet()) {
+            ArrayList <Particle> possibleParticlesList = entry.getValue();
+            if (possibleParticlesList.size() > 1){
+                for(Particle p: possibleParticlesList){
+                    if ((particle.getIsRed() && particle.getSide()) || (!particle.getIsRed() && !particle.getSide())){
+                        pasan += 1;
+                    }
+                    else {
+                        rebotan += 1;
+                    }
+                }
+                if (pasan > 0 && rebotan > 0){
+                    calculocastroso(entry.getValue());
+                }
+                else if (pasan > 0 && rebotan == 0){
+                    demons.get(entry.getKey()).open();
+                    openDemons.add(entry.getKey());
+                }
+            }
+            else if (possibleParticlesList.size() = 1){
+                Particle particle = possibleParticlesList.get(0);
+                if ((particle.getIsRed() && particle.getSide()) || (!particle.getIsRed() && !particle.getSide())){
+                    demons.get(entry.getKey()).open();
+                    openDemons.add(entry.getKey());
+                }
+            }
+        }
+        return openDemons;
     }
 }
