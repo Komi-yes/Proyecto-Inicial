@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.*;
 import java.awt.*;
@@ -261,7 +262,29 @@ public class MaxwellContainer {
             }
         }
     }
-
+    
+    public boolean cycleVerification(Particle p){
+        float yHit;
+        int intYHit;
+        for (ArrayList<Integer> state : p.getCycle()){
+            if(p.getIsRed() && p.getSide() && state.get(2)+state.get(0)< 0){
+                yHit = (float)p.getPy() + (float)p.getVy() * ((float)p.getPx() / (float)p.getVx());
+                intYHit = (int) yHit;
+                if(demons.containsKey(intYHit)){
+                    return true;
+                }
+            }
+            else if (!p.getIsRed() && !p.getSide() && state.get(2)+state.get(0) > 0){
+                yHit = (float)p.getPy() + (float)p.getVy() * ((float)p.getPx() / (float)p.getVx());
+                intYHit = (int) yHit;
+                if(demons.containsKey(intYHit)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     /**
      * Inicia la simulación durante un número específico de ticks.
      *
@@ -269,33 +292,47 @@ public class MaxwellContainer {
      */
     public void start(int ticks) {
         int tick = 0;
+        boolean bounceDemon = false;
         while (tick < ticks) {
+            
             ArrayList<Particle> particlesPredictions = new ArrayList<>();
             ArrayList<Integer> openDemons;
-
             for (Particle p : particles.values()) {
 
                 Particle particle = p.movePrediction();
                 particlesPredictions.add(particle);
+                if (time == 0 && bounceDemon == false){
+                    bounceDemon=cycleVerification(p);
+                }
             }
-
-            particlesPredictions.removeIf(elemento -> elemento == null);
-            openDemons = askDemon(particlesPredictions);
-            if (openDemons.get(0) == -1){
-                JOptionPane.showMessageDialog(null, "Impossible");
-                break;
+            
+            if (bounceDemon == false){
+                openDemons = new ArrayList<>();
+                openDemons.add(-1);
+            }
+            else {
+                particlesPredictions.removeIf(elemento -> elemento == null);
+                openDemons = askDemon(particlesPredictions);
+            }
+            
+            if (openDemons != null){
+                if (openDemons.size() > 0){
+                    if (openDemons.get(0) == -1){
+                        break;
+                    }
+                }
             }
             for (Particle p : particlesPredictions) {
                 boolean state0 = p.getSide();
                 p.move(openDemons);
                 boolean state1 = p.getSide();
                 if (state0 == true &&  state1 == false){
-                    chamber.get(0).addParticle(p.getIsRed());
-                    chamber.get(1).delParticle(p.getIsRed());
+                    chambers.get(0).addParticle(p.getIsRed());
+                    chambers.get(1).delParticle(p.getIsRed());
                 }
                 else if(state0 == false && state1 == true){
-                    chamber.get(1).addParticle(p.getIsRed());
-                    chamber.get(0).delParticle(p.getIsRed());
+                    chambers.get(1).addParticle(p.getIsRed());
+                    chambers.get(0).delParticle(p.getIsRed());
                 }
             }
             tick += 1;
@@ -307,32 +344,48 @@ public class MaxwellContainer {
      * Reproduce la simulación.
      */
     public int solve() {
+        boolean bounceDemon = false;
         while (!isGoal()) {
             ArrayList<Particle> particlesPredictions = new ArrayList<>();
             ArrayList<Integer> openDemons;
-
+                
             for (Particle p : particles.values()) {
 
                 Particle particle = p.movePrediction();
                 particlesPredictions.add(particle);
+                if (time == 0 && bounceDemon == false){
+                    bounceDemon=cycleVerification(p);
+                }
+            }
+            
+            if (bounceDemon == false){
+                openDemons = new ArrayList<>();
+                openDemons.add(-1);
+            }
+            else {
+                particlesPredictions.removeIf(elemento -> elemento == null);
+                openDemons = askDemon(particlesPredictions);
+            }       
+            
+            if (openDemons != null){
+                if (openDemons.size() > 0){
+                    if (openDemons.get(0) == -1){
+                        return -1;
+                    }
+                }
             }
 
-            particlesPredictions.removeIf(elemento -> elemento == null);
-            openDemons = askDemon(particlesPredictions);
-            if (openDemons.get(0) == -1){
-                return -1;
-            }
             for (Particle p : particlesPredictions) {
                 boolean state0 = p.getSide();
                 p.move(openDemons);
                 boolean state1 = p.getSide();
                 if (state0 == true &&  state1 == false){
-                    chamber.get(0).addParticle(p.getIsRed());
-                    chamber.get(1).delParticle(p.getIsRed());
+                    chambers.get(0).addParticle(p.getIsRed());
+                    chambers.get(1).delParticle(p.getIsRed());
                 }
                 else if(state0 == false && state1 == true){
-                    chamber.get(1).addParticle(p.getIsRed());
-                    chamber.get(0).delParticle(p.getIsRed());
+                    chambers.get(1).addParticle(p.getIsRed());
+                    chambers.get(0).delParticle(p.getIsRed());
                 }
             }
             time += 1;
@@ -619,7 +672,7 @@ public class MaxwellContainer {
     private ArrayList<Integer> askDemon(ArrayList<Particle> particlesPredictions) {
         ArrayList<Integer> openDemons = new ArrayList<>();
         TreeMap<Integer, ArrayList<Particle>> possibleParticles = new TreeMap<>();
-        double yHit;
+        float yHit;
         int intYHit;
         int pasan = 0;
         int rebotan = 0;
@@ -627,7 +680,7 @@ public class MaxwellContainer {
             possibleParticles.put(key, new ArrayList<>());
         }
         for (Particle p : particlesPredictions){
-            yHit = p.getPy() + p.getVy() * (p.getPx() / p.getVx());
+            yHit = (float)p.getPy() + (float)p.getVy() * ((float)p.getPx() / (float)p.getVx());
             intYHit = (int) yHit;
             if(demons.containsKey(intYHit)){
                 possibleParticles.get(intYHit).add(p);
@@ -638,7 +691,7 @@ public class MaxwellContainer {
             ArrayList <Particle> possibleParticlesList = entry.getValue();
             if (possibleParticlesList.size() > 1){
                 for(Particle p: possibleParticlesList){
-                    if ((particle.getIsRed() && particle.getSide()) || (!particle.getIsRed() && !particle.getSide())){
+                    if ((p.getIsRed() && p.getSide()) || (!p.getIsRed() && !p.getSide())){
                         pasan += 1;
                     }
                     else {
@@ -646,7 +699,7 @@ public class MaxwellContainer {
                     }
                 }
                 if (pasan > 0 && rebotan > 0){
-                    byte demonResponse = demons.get(getKey()).demonCalculation(entry.getValue());
+                    byte demonResponse = demons.get(entry.getKey()).demonCalculation(entry.getValue());
                     if (demonResponse == 1){
                         openDemons.add(entry.getKey());
                     }
@@ -661,7 +714,7 @@ public class MaxwellContainer {
                     openDemons.add(entry.getKey());
                 }
             }
-            else if (possibleParticlesList.size() = 1){
+            else if (possibleParticlesList.size() == 1){
                 Particle particle = possibleParticlesList.get(0);
                 if ((particle.getIsRed() && particle.getSide()) || (!particle.getIsRed() && !particle.getSide())){
                     demons.get(entry.getKey()).open();

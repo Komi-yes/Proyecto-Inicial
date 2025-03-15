@@ -1,3 +1,9 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+import javax.swing.JOptionPane;
+import javax.swing.*;
+import java.awt.*;
 
 public class MaxwellContest{
     public float solve (int height, int width, int d, int b, int r, int[][] particles){

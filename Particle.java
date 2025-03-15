@@ -55,7 +55,7 @@ public class Particle {
         vx = velx;
         vy = vely;
         cycle = cycleCalculator(); 
-        calculation = false
+        calculation = false;
         makeVisible();
     }
 
@@ -75,27 +75,36 @@ public class Particle {
 
     public ArrayList<ArrayList<Integer>> cycleCalculator(){
         ArrayList<ArrayList<Integer>> cycleCalculation = new ArrayList<>();
+        ArrayList<Integer> state = new ArrayList<>();
         int posXCal = px;
         int posYCal = py;
         int velXCal = vx;
         int velYCal = vy;
-
-        while(!cycleCalculation.contains({posXCal, posYCal, velXCal, velYCal})){
-            cycleCalculation.add({posXCal, posYCal, velXCal, velYCal});
+        state.add(posXCal);
+        state.add(posYCal);
+        state.add(velXCal);
+        state.add(velYCal);
+        while(!cycleCalculation.contains(state)){
+            cycleCalculation.add(state);
             ArrayList<Integer> newState = bounceCalculation(posXCal+velXCal, posYCal+velYCal, velXCal, velYCal);
             posXCal = newState.get(0);
             posYCal = newState.get(1);
             velXCal = newState.get(2);
             velYCal = newState.get(3);
+            state = new ArrayList<>();
+            state.add(posXCal);
+            state.add(posYCal);
+            state.add(velXCal);
+            state.add(velYCal);
         }
         return cycleCalculation;
     }
 
-    public ArrayList<Integer> bounceCalculation(posXCal, posYCal, velXCal, velYCal){
+    public ArrayList<Integer> bounceCalculation(int posXCal, int posYCal, int velXCal, int velYCal){
         int xLeft;
         int yLeft;
          if (side) {
-            while (posXCal > w || posXCal < 0 || newpy > h || newpy < 0) {
+            while (posXCal > w || posXCal < 0 || posYCal > h || posYCal < 0) {
                 if (posXCal > w) {
                     xLeft = posXCal - w;
                     posXCal = w - xLeft;
@@ -115,7 +124,7 @@ public class Particle {
                 }
             }
         } else {
-            while (posXCal < -w || posXCal > 0 || newpy > h || newpy < 0) {
+            while (posXCal < -w || posXCal > 0 || posYCal > h || posYCal < 0) {
                 if (posXCal < -w) {
                     xLeft = posXCal + w;
                     posXCal = -w - xLeft;
@@ -155,6 +164,7 @@ public class Particle {
                 } else if (newpx < 0) {
                     xLeft = -newpx;
                     newpx = xLeft;
+                    System.out.println("hola "+"move prediction px:"+getPx()+", py:"+getPy()+", vx:"+getVx()+", vy:"+getVy()+", newpx:"+newpx);
                     changeDirection("izquierda");
                 } else if (newpy > h) {
                     yLeft = newpy - h;
@@ -275,12 +285,16 @@ public class Particle {
         int yLeft;
         newpx = px + vx;
         newpy = py + vy;
-        makeInvisible();
+        System.out.println(newpx);
+        if (isVisible){
+            makeInvisible();
+        }
         if (side) {
             while (newpx > w || newpx < 0 || newpy > h || newpy < 0) {
                 if (newpx > w) {
                     xLeft = newpx - w;
                     newpx = w - xLeft;
+                    System.out.println("move prediction px:"+getPx()+", py:"+getPy()+", vx:"+getVx()+", vy:"+getVy()+", newpx:"+newpx);
                     changeDirection("derecha");
                 } else if (newpx < 0) {
                     return this;
@@ -315,6 +329,7 @@ public class Particle {
         }
         px = newpx;
         py = newpy;
+        System.out.println("move prediction px:"+getPx()+", py:"+getPy()+", vx:"+getVx()+", vy:"+getVy()+", newpx:"+newpx);
         if (!calculation){
             smallCircle.moveTo(px + w, h - py);
             bigCircle.moveTo(px + w, h - py);
