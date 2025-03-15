@@ -20,10 +20,12 @@ public class Chamber {
      * @param h La altura de la cámara.
      * @param s El lado de la cámara (false para izquierda, true para derecha).
      */
-    public Chamber(int w, int h, Boolean s) {
+    public Chamber(int width, int height, Boolean s) {
         particlesInside = 0;
         blueParticles = 0;
         redParticles = 0;
+        w = width;
+        h = height;
         side = s;
         if (side) {
             wall = new Rectangle(1, 0);
@@ -35,6 +37,16 @@ public class Chamber {
         wall.changeColor("blanco");
         makeVisible();
         isVisible = true;
+    }
+
+    public Chamber(int width, int height, Boolean s, boolean cal) {
+        particlesInside = 0;
+        blueParticles = 0;
+        redParticles = 0;
+        w = width;
+        h = height;
+        side = s;
+        isVisible = false;
     }
 
     /**

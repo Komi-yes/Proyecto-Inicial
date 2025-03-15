@@ -21,6 +21,7 @@ public class MaxwellContainer {
     private List<Hole> holes;               
     private List<Chamber> chambers;         
     private TreeMap<Integer, String> colorMap; 
+    private boolean calculation;
 
     /**
      * Crea un contenedor con una altura y un ancho específicos.
@@ -44,6 +45,7 @@ public class MaxwellContainer {
             demons = new TreeMap<>();
             particles = new TreeMap<>();
             colorMap = createColorMap();
+            calculation = false;
             makeVisible();
         }
     }
@@ -99,13 +101,62 @@ public class MaxwellContainer {
                     }
                 }
             }
+            calculation = false;
             makeVisible();
         }
     }
 
+    public MaxwellContainer(int height, int width, int d, int b, int r, int[][] p, boolean cal) {
+        if (height > 200 || width > 200 || width < 0 || height < 0) {
+            JOptionPane.showMessageDialog(null, "Medidas de contenedor fuera de rango");
+        } else {
+            w = width;
+            h = height;
+            time = 0;
+            chambers = new ArrayList<>();
+            chambers.add(new Chamber(w, h, false, cal));
+            chambers.add(new Chamber(w, h, true, cal));
+            holes = new ArrayList<>();
+            demons = new TreeMap<>();
+            if (d < 0 || d > h) {
+                JOptionPane.showMessageDialog(null, "Demonio fuera de rango");
+            } else {
+                demons.put(d, new Demon(d, w, h, cal));
+            }
+            particles = new TreeMap<>();
+            int i;
+            colorMap = createColorMap();
+            for (i = 0; i < r + b; i++) {
+                if (particlesMessages(p[i][0], p[i][1], p[i][2], p[i][3], colorMap.get(i))) {
+                    if (i < r) {
+                        particles.put(colorMap.get(i), new Particle(colorMap.get(i), true, p[i][0], p[i][1], p[i][2], p[i][3], w, h, cal));
+                        if (p[i][0] > 0) {
+                            chambers.get(1).addParticle(true);
+                        } else {
+                            chambers.get(0).addParticle(true);
+                        }
+                    } else {
+                        particles.put(colorMap.get(i), new Particle(colorMap.get(i), false, p[i][0], p[i][1], p[i][2], p[i][3], w, h, cal));
+                        if (p[i][0] > 0) {
+                            chambers.get(1).addParticle(false);
+                        } else {
+                            chambers.get(0).addParticle(false);
+                        }
+                    }
+                }
+            }
+        }
+        calculation = true;
+    }
+
     public void addDemon(int d) {
         if (demons.get(d) == null) {
-            demons.put(d, new Demon(d, w, h));
+            if (calculation){
+                demons.put(d, new Demon(d, w, h,calculation));
+            }
+            else{
+                demons.put(d, new Demon(d, w, h));
+            }
         }
     }
 
@@ -134,7 +185,12 @@ public class MaxwellContainer {
     public void addParticle(String color, Boolean isRed, int px, int py, int vx, int vy) {
     if (particlesMessages(px, py, vx, vy, color)){
         if (particles.get(color) == null && colorMap.containsValue(color)){
-            particles.put(color,new Particle(color,isRed,px,py,vx,vy,w,h));
+            if (calculation){
+                particles.put(color,new Particle(color,isRed,px,py,vx,vy,w,h,calculation));
+            }
+            else{
+                particles.put(color,new Particle(color,isRed,px,py,vx,vy,w,h));
+            }
             if (isRed){
                 if (px > 0){
                     chambers.get(1).addParticle(true);
@@ -150,7 +206,9 @@ public class MaxwellContainer {
                 }
             }
         }
-        makeVisible();
+        if (calculation){
+            makeVisible();
+        }
     }
     }
 
@@ -161,22 +219,26 @@ public class MaxwellContainer {
      */
     public void delParticle(String color) {
     if (particles.containsKey(color)){
-            Particle p = particles.get(color);
+        Particle p = particles.get(color);
         if (p.getIsRed()){
-                if (p.getPx() > 0){
-                    chambers.get(1).delParticle(true);
-                } else {
-                    chambers.get(0).delParticle(true);
-                }
-
-            }else{
-                if (p.getPx() > 0){
-                    chambers.get(1).delParticle(false);
-                } else {
-                    chambers.get(0).delParticle(false);
-                }
+            if (p.getPx() > 0){
+                chambers.get(1).delParticle(true);
+            } 
+            else {
+            chambers.get(0).delParticle(true);
+            }   
+        }
+        else{
+            if (p.getPx() > 0){
+                chambers.get(1).delParticle(false);
+            } 
+            else {
+                chambers.get(0).delParticle(false);
             }
-        p.delete();
+        }
+        if (calculation){
+            p.delete();
+        }
         particles.remove(color);
     }
 }
@@ -191,7 +253,12 @@ public class MaxwellContainer {
         if (px < -w || px > w || py > h || py < 0) {
             JOptionPane.showMessageDialog(null, "Agujero fuera de rango");
         } else {
-            holes.add(new Hole(px, py, particles));
+            if (calculation){
+                holes.add(new Hole(px, py, particles,calculation));    
+            }
+            else{
+                holes.add(new Hole(px, py, particles));
+            }
         }
     }
 
@@ -207,15 +274,29 @@ public class MaxwellContainer {
             ArrayList<Integer> openDemons;
 
             for (Particle p : particles.values()) {
+
                 Particle particle = p.movePrediction();
                 particlesPredictions.add(particle);
             }
 
             particlesPredictions.removeIf(elemento -> elemento == null);
             openDemons = askDemon(particlesPredictions);
-
+            if (openDemons.get(0) == -1){
+                JOptionPane.showMessageDialog(null, "Impossible");
+                break;
+            }
             for (Particle p : particlesPredictions) {
+                boolean state0 = p.getSide();
                 p.move(openDemons);
+                boolean state1 = p.getSide();
+                if (state0 == true &&  state1 == false){
+                    chamber.get(0).addParticle(p.getIsRed());
+                    chamber.get(1).delParticle(p.getIsRed());
+                }
+                else if(state0 == false && state1 == true){
+                    chamber.get(1).addParticle(p.getIsRed());
+                    chamber.get(0).delParticle(p.getIsRed());
+                }
             }
             tick += 1;
             time += 1;
@@ -225,7 +306,38 @@ public class MaxwellContainer {
     /**
      * Reproduce la simulación.
      */
-    public void play() {
+    public int solve() {
+        while (!isGoal()) {
+            ArrayList<Particle> particlesPredictions = new ArrayList<>();
+            ArrayList<Integer> openDemons;
+
+            for (Particle p : particles.values()) {
+
+                Particle particle = p.movePrediction();
+                particlesPredictions.add(particle);
+            }
+
+            particlesPredictions.removeIf(elemento -> elemento == null);
+            openDemons = askDemon(particlesPredictions);
+            if (openDemons.get(0) == -1){
+                return -1;
+            }
+            for (Particle p : particlesPredictions) {
+                boolean state0 = p.getSide();
+                p.move(openDemons);
+                boolean state1 = p.getSide();
+                if (state0 == true &&  state1 == false){
+                    chamber.get(0).addParticle(p.getIsRed());
+                    chamber.get(1).delParticle(p.getIsRed());
+                }
+                else if(state0 == false && state1 == true){
+                    chamber.get(1).addParticle(p.getIsRed());
+                    chamber.get(0).delParticle(p.getIsRed());
+                }
+            }
+            time += 1;
+        }
+        return time;
     }
 
     /**
@@ -534,7 +646,15 @@ public class MaxwellContainer {
                     }
                 }
                 if (pasan > 0 && rebotan > 0){
-                    calculocastroso(entry.getValue());
+                    byte demonResponse = demons.get(getKey()).demonCalculation(entry.getValue());
+                    if (demonResponse == 1){
+                        openDemons.add(entry.getKey());
+                    }
+                    else if (demonResponse == -1){
+                        ArrayList<Integer> lista = new ArrayList<>();
+                        lista.add(-1); 
+                        return lista;
+                    }
                 }
                 else if (pasan > 0 && rebotan == 0){
                     demons.get(entry.getKey()).open();

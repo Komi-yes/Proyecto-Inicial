@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 /**
  * La clase Demon representa un demonio que puede abrir o cerrar un pasaje entre cámaras.
  * El demonio puede estar visible o invisible y puede estar en un estado abierto o cerrado.
@@ -23,6 +26,12 @@ public class Demon {
         rectangle.changeSize(5, 5);
         closed = true;
         isVisible = true;
+    }
+
+        public Demon(int distance, int w, int h, boolean cal) {
+        d = distance;
+        closed = true;
+        isVisible = false;
     }
 
     /**
@@ -59,12 +68,39 @@ public class Demon {
         return null;
     }
 
+
+
     /**
      * Hace visible al demonio.
      */
     public void makeVisible() {
         rectangle.makeVisible();
         isVisible = true;
+    }
+
+    public byte demonCalculation(ArrayList<Particle> particleList){ // retorna -1 = imposible, 0 = cerrado, 1 = abierto
+        ArrayList<Integer> particleCross = new ArrayList<>();
+        ArrayList<Integer> particleBounce = new ArrayList<>();
+        for (Particle p : particleList){
+            if ((p.getIsRed() && p.getSide()) || (!p.getIsRed() && !p.getSide())){
+                particleCross.add(p.getCycle().size());
+            } 
+            else {
+                particleBounce.add(p.getCycle().size());
+            }
+        }
+        if (!Collections.disjoint(particleCross, particleBounce)){
+            return -1;
+        }
+        else{
+            if (Collections.min(particleCross) > Collections.min(particleBounce)) {
+                open();
+                return 1;
+            }
+            else{
+                return 0;
+            }
+        }
     }
 
     /**

@@ -19,7 +19,8 @@ public class Particle {
     private boolean isRed;       
     private int w;               
     private int h;         
-    private ArrayList<ArrayList<Integer>> cycle;      
+    private ArrayList<ArrayList<Integer>> cycle;     
+    private boolean calculation; 
 
     /**
      * Crea una partícula con un color, posición, velocidad y tamaño específicos.
@@ -54,8 +55,22 @@ public class Particle {
         vx = velx;
         vy = vely;
         cycle = cycleCalculator(); 
+        calculation = false
         makeVisible();
-        isVisible = true;
+    }
+
+        public Particle(String color, Boolean red, int posx, int posy, int velx, int vely, int width, int height, boolean cal) {
+        w = width;
+        h = height;
+        isRed = red;
+        px = posx;
+        py = posy;
+        side = (px > 0) ? true : false;
+        vx = velx;
+        vy = vely;
+        cycle = cycleCalculator();
+        calculation = true;
+        isVisible = false; 
     }
 
     public ArrayList<ArrayList<Integer>> cycleCalculator(){
@@ -73,6 +88,7 @@ public class Particle {
             velXCal = newState.get(2);
             velYCal = newState.get(3);
         }
+        return cycleCalculation;
     }
 
     public ArrayList<Integer> bounceCalculation(posXCal, posYCal, velXCal, velYCal){
@@ -119,7 +135,12 @@ public class Particle {
                 }
             }
         }
-        return {posXCal, posYCal, velXCal, velYCal};
+        ArrayList<Integer> stateList = new ArrayList<>();
+        stateList.add(posXCal);
+        stateList.add(posYCal);
+        stateList.add(velXCal);
+        stateList.add(velYCal);
+        return stateList;
     }
 
     public ArrayList<Integer> bounce(int newpx, int newpy) {
@@ -184,7 +205,9 @@ public class Particle {
         int newpy;
         int xLeft;
         int yLeft;
-        makeInvisible();
+        if (isVisible){
+            makeInvisible();
+        }
         newpx = px + vx;
         newpy = py + vy;
         yHit = py + vy * (px / vx);
@@ -233,9 +256,11 @@ public class Particle {
 
         px = newpx;
         py = newpy;
-        smallCircle.moveTo(px + w, h - py);
-        bigCircle.moveTo(px + w, h - py);
-        makeVisible();
+        if (!calculation){
+            smallCircle.moveTo(px + w, h - py);
+            bigCircle.moveTo(px + w, h - py);
+            makeVisible();
+        }
     }
 
     /**
@@ -290,9 +315,11 @@ public class Particle {
         }
         px = newpx;
         py = newpy;
-        smallCircle.moveTo(px + w, h - py);
-        bigCircle.moveTo(px + w, h - py);
-        makeVisible();
+        if (!calculation){
+            smallCircle.moveTo(px + w, h - py);
+            bigCircle.moveTo(px + w, h - py);
+            makeVisible(); 
+        }
         return null;
     }
 
@@ -376,6 +403,10 @@ public class Particle {
         return side;
     }
 
+    public ArrayList<ArrayList<Integer>> getCycle(){
+        return cycle;
+    }
+    
     /**
      * Elimina la partícula y la hace invisible.
      */

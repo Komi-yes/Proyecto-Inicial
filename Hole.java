@@ -30,6 +30,14 @@ public class Hole {
         isVisible = true;
     }
 
+    public Hole(int posx, int posy, int particles,boolean cal) {
+        px = posx;
+        py = posy;
+        maxParticles = particles;
+        particlesEaten = 0;
+        isVisible = false;
+    }
+
     /**
      * Consume una partícula.
      */
